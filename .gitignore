@@ -1,0 +1,11 @@
+# Ignore node_modules and build files
+frontend/node_modules/
+frontend/dist/
+
+# Ignore Spring Boot build files
+lms/target/
+
+# IDE files
+*.iml
+.idea/
+.vscode/
