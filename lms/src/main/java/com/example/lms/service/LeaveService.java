@@ -1,5 +1,6 @@
 package com.example.lms.service;
 
+import com.example.lms.exception.ResourceNotFoundException;
 import com.example.lms.model.LeaveBalance;
 import com.example.lms.model.LeaveRequest;
 import com.example.lms.model.User;
@@ -19,7 +20,8 @@ public class LeaveService {
     @Autowired private UserRepository userRepository;
 
     public LeaveRequest applyLeave(Long userId, String reason,String fromDate,String toDate) {
-        User user = userRepository.findById(userId).orElseThrow();
+        User user = userRepository.findById(userId).orElseThrow(()->
+                new ResourceNotFoundException("Leave request not found with id"+userId));
         LeaveBalance balance = leaveBalanceRepository.findByUserId(userId);
 
         if (balance.getRemainingLeaves() <= 0) {

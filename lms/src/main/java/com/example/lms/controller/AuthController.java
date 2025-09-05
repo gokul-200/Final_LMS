@@ -64,7 +64,10 @@
 package com.example.lms.controller;
 
 import com.example.lms.dto.AuthDtos;
+import com.example.lms.model.LeaveBalance;
+import com.example.lms.model.Role;
 import com.example.lms.model.User;
+import com.example.lms.repository.LeaveBalanceRepository;
 import com.example.lms.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.*;
@@ -89,14 +92,33 @@ public class AuthController {
     @Autowired
     private PasswordEncoder passwordEncoder;
 
+    @Autowired
+    private LeaveBalanceRepository leaveBalanceRepository;
+
     @PostMapping("/register")
     public ResponseEntity<Map<String, String>> register(@RequestBody AuthDtos dto) {
         if (userRepository.findByUsername(dto.getUsername()).isPresent()) {
             return ResponseEntity.badRequest().body(Map.of("message", "User already exists"));
         }
 
-        User user = new User(null, dto.getUsername(), passwordEncoder.encode(dto.getPassword()), dto.getRole().equalsIgnoreCase("ADMIN") ? com.example.lms.model.Role.ADMIN : com.example.lms.model.Role.EMPLOYEE);
+//        User user = new User(null, dto.getUsername(), passwordEncoder.encode(dto.getPassword()), dto.getRole().equalsIgnoreCase("ADMIN") ? com.example.lms.model.Role.ADMIN : com.example.lms.model.Role.EMPLOYEE);
+//        userRepository.save(user);
+        User user = new User();
+        user.setUsername(dto.getUsername());
+        user.setPassword(passwordEncoder.encode(dto.getPassword()));
+        user.setRole("ADMIN".equalsIgnoreCase(dto.getRole()) ? Role.ADMIN : Role.EMPLOYEE);
         userRepository.save(user);
+
+        if (user.getRole() == Role.EMPLOYEE &&
+                leaveBalanceRepository.findByUserId(user.getId()) == null) {
+            LeaveBalance b = new LeaveBalance();
+            b.setTotalLeaves(20);
+            b.setUsedLeaves(0);
+            b.setRemainingLeaves(20);
+            b.setUser(user);
+            leaveBalanceRepository.save(b);
+        }
+
 
         return ResponseEntity.ok(Map.of("message", "User registered successfully"));
     }
